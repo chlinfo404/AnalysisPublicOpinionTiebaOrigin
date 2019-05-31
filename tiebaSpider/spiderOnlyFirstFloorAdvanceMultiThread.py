@@ -11,18 +11,28 @@ import time
 import random
 import json
 import time
+import threading
+from queue import Queue
 from urllib.parse import quote
+from Proxy import Proxy
 
 headers = {
 		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36'
 		}
 
+proxy = Proxy("http://tpv.daxiangdaili.com/ip/?tid=557133875098914&num=1&delay=5&filter=on")
+proxies = None
+
+def get_proxy():
+	global proxy
+	return proxy.get_proxy()
+
 def pause():
 	'''
 	延迟一到两秒
 	'''
-	sleepTime = random.randint(100,500)*1.0/1000
-	# 延迟0.1-0.5秒
+	sleepTime = random.randint(100,200)*1.0/1000
+	# 延迟0.1-0.2秒
 	time.sleep(sleepTime)
 
 def make_up_url(urlPrefix, urlSuffix, keyWord):
@@ -46,8 +56,10 @@ def get_url_list_of_one_page(originUrl, page = 0):
 	# url = originUrl + str(page*50)
 	# 拼装每一页实际网址并请求
 	# 这是1.0请求网页的网址
+	global proxies
+	proxies = get_proxy()
 	url = originUrl +str(page + 1)
-	content = requests.get(url, headers = headers)
+	content = requests.get(url, headers = headers, proxies = proxies)
 	pattern = r'href="(/p/[0-9]*)[^ ]'
 	# 获取每一页上所有文章的网址
 	articleList = re.findall(pattern, content.text)
@@ -67,8 +79,10 @@ def get_soup_of_article(articleUrl, page=1):
 	'''
 	获取每一页soup对象
 	'''
+	global proxies
+	proxies = get_proxy()
 	url =  articleUrl + "?pn="
-	htmlText = requests.get(url+str(page), headers=headers)
+	htmlText = requests.get(url+str(page), headers=headers, proxies=proxies)
 	soup = BeautifulSoup(htmlText.text, 'lxml')
 	return soup
 
@@ -123,6 +137,17 @@ def gogogo_list_first_floor_advance(pageWant = 1, keyWord = "杭州电子科技�
 
 if __name__ == '__main__':
 
+	start = time.time()
 	print('开始爬取')
+	'''
+	for t in threads:
+		t.setDaemon(True)
+		t.start()
 
+	t.join()
+	'''
 	result = gogogo_list_first_floor_advance(3, "杭州电子科技大学 三位一体")
+	end = time.time()
+	print("time used:",end-start)
+	# print(result)
+	print(len(result))

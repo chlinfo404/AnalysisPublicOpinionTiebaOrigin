@@ -23,6 +23,7 @@
 from tiebaSpider import spiderOnlyFirstFloorAdvance as soffa
 from SentimentAnalysis import Analysis
 import csv
+import time
 
 def getContentAndSentimentDict(page=1, keyword="杭州电子科技大学"):
 	articleList = soffa.gogogo_list_first_floor_advance(page, keyword)
@@ -49,10 +50,16 @@ def getContentAndSentimentDictToCsv(page=1, keyword="杭州电子科技大学"):
 				'title', 'href', 'positive_prob', 'confidence']
 	dataList = getContentAndSentimentDict(page = page, keyword = keyword)
 	print("All contents with sentiment done")
-	with open('20190427.csv', 'w') as f:
-		print('saving')
+	dateTime = time.strftime("%Y-%m-%d_%H_%M", time.localtime())
+	# 按时间存储
+	fileName = 'data\\'+dateTime+'_'+keyword.replace(' ','_')+'.csv'
+	# 拼接文件名，并且将关键词中的空格替换为下划线
+	with open(fileName, 'w') as f:
+		print('saving '+fileName)
 		dWriter = csv.DictWriter(f, dataList[0].keys())
+		# 用键列表定义csv写对象
 		dWriter.writeheader()
+		# 写列名
 		for data in dataList:
 			dWriter.writerow(data)
 		print('save done')
